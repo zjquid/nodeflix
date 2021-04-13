@@ -1,49 +1,47 @@
-const puppeteer = require('puppeteer');
-const CloudflareBypasser = require('cloudflare-bypasser');
+// nodeflix - fake netflix
+// now with working cloudflare bypass!
 
 (async function main() {
-    try {
-        
-        const browser = await puppeteer.launch({ headless: false });
-        const page = await browser.newPage();
-        page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0');
-/*
 
-        await page.goto('https://soapgate.org/');
-        await page.waitForSelector('.row');
+    const puppeteerExtra = require('puppeteer-extra');
+    const pluginStealth = require('puppeteer-extra-plugin-stealth');
+
+    puppeteerExtra.use(pluginStealth());
+    const browser = await puppeteerExtra.launch({ headless: false });
+    const page = await browser.newPage();
+    const url = 'https://soap2day.to';
+
+    await page.goto(url);
+    await page.setViewport({ width: 1250, height: 676 })
+    await page.waitForSelector('.navbar #txtSearch')
+    await page.click('.navbar #txtSearch')
     
-        const rows = await page.$$('.row');
+    // prompt the terminal to get the search target
+    const show = 'twin peaks';
 
-        console.log('poop');
-        console.log(rows.length);
+    await page.type('#txtSearch', show);
 
-        for (const row of rows) {
-            const button = await row.$('a.btn');
-            button.click();
-        }
-*/
+    await page.waitForSelector('.collapse > .navbar-form > .form-group > #btnSearch > .fa')
+    await page.click('.collapse > .navbar-form > .form-group > #btnSearch > .fa')
+  
+    // here is where it gets messy
+    // the program needs to know which item to select
+    // click title first...
+    await page.waitForSelector('.panel:nth-child(2) > .panel-body:nth-child(2) > .row:nth-child(1) > .col-sm-12:nth-child(1) > .row:nth-child(1) > .col-sm-12:nth-child(1) > .col-xs-12:nth-child(1) > .col-lg-2:nth-child(2) > .thumbnail:nth-child(1) img:nth-child(1)')
+    await page.click('.panel:nth-child(2) > .panel-body:nth-child(2) > .row:nth-child(1) > .col-sm-12:nth-child(1) > .row:nth-child(1) > .col-sm-12:nth-child(1) > .col-xs-12:nth-child(1) > .col-lg-2:nth-child(2) > .thumbnail:nth-child(1) img:nth-child(1)')
+    
+    // ...then click episode
+    await page.waitForSelector('.col-sm-12 > .alert:nth-child(4) > .col-sm-12 > .col-sm-12:nth-child(8) > a')
+    await page.click('.col-sm-12 > .alert:nth-child(4) > .col-sm-12 > .col-sm-12:nth-child(8) > a')
+  
+    // once we end up on the episode page,
+    // we need to go to...
+    // inspect element > network > media sources > refresh > get link to media source (should only be one)
+    // now that we have the link to the .mp4 file, we plug the link into a bash script with vlc/mpv
+    // this might be helpful --> https://chromedevtools.github.io/devtools-protocol/
 
-        let cf = new CloudflareBypasser();
+    await page.waitFor(10000);
 
-        cf.request('https://apple.com')
-        .then(res => {
-            // res - full response
-        });
-
-        await page.goto('https://soap2day.to');
-
-        cf.request('https://soap2day.to')
-        .then(res => {
-        });
-
-        setTimeout(() => { page.waitForSelector('sections'); }, 5000);
-
-        const test = await page.$$('.sections');
-        console.log(test.length);
-
-    } catch (e) {
-        console.log('our error', e);
-    }
-
+    await browser.close();
 
 })();
